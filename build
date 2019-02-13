@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+mkdir -p dist
+echo "build src/group.ls ->> dist/parse-path.js ..."
+./node_modules/.bin/lsc -cbp src/group.ls > dist/parse-path.js
+echo "build src/parse-path.ls -> dist/parse-path.js ..."
+./node_modules/.bin/lsc -cbp src/parse-path.ls >> dist/parse-path.js
+echo "minifying parse-path.js ..."
+./node_modules/.bin/uglifyjs dist/parse-path.js > dist/parse-path.min.js
+echo "done."
+
