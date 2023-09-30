@@ -2,8 +2,10 @@ parse-path = (path, trianglify = false) ->
   [shape,hole] = [[],[]]
   svg = document.createElementNS \http://www.w3.org/2000/svg, \svg
   svg.style <<< position: \absolute, opacity: 0, z-index: -1, top: 0
+  # appendChild is required to get correct result from complex shapes.
   document.body.appendChild svg
   ds = []
+  t1 = Date.now!
   paths = path.replace(/Z/g,'z').split \\z
     .filter -> it
     .map ->
@@ -14,7 +16,9 @@ parse-path = (path, trianglify = false) ->
       box = path.getBoundingClientRect!
       len = path.getTotalLength!
       pts = []
-      for i from 0 to (len + 1) by (if len => (len / 200) else 1) =>
+      # TODO 50 samples made here. we may want to use sth like bisect with a threshold distance
+      # so we can have a dynamic point sample count. 
+      for i from 0 to (len + 1) by (if len => (len / 50) else 1) =>
         p = path.getPointAtLength i
         pts.push p.x * 0.005 - 0.8, 0.1 - p.y * 0.02
       sum = 0
@@ -93,9 +97,8 @@ parse-path = (path, trianglify = false) ->
       ret.pts ++= pts
       for i from 0 til pts.length / 2 => ret.groups.push g
       g++
-    svg.parentNode.removeChild svg
-    return ret
   else
     ret = []
     for g in gs => ret.push g.members.map((i)->ds[i]).join('z')
-    return ret
+  svg.parentNode.removeChild svg
+  return ret

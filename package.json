@@ -3,7 +3,7 @@
   "name": "@loadingio/parse-path",
   "license": "MIT",
   "description": "SVG Path Separation and Grouping",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "browser": "dist/index.min.js",
   "main": "dist/index.min.js",
   "files": [
