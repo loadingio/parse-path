@@ -29,8 +29,8 @@ parse-path = (path, trianglify = false) ->
     .filter -> it
   shapes = []
   shape = null
-  # check if p1 and p2 intersect.
-  intersect = (p1, p2) ->
+  # check if p1 and p2 intersect. ratio: ratio of inside point. 0 = any point. 1 = all points.
+  intersect = (p1, p2, ratio = 0.5) ->
     skip = 0 # skip how many points per check. since we have quite a lot points, this can speed up a bit.
     skip = skip * 2 + 2
     [b1, b2] = [p1.box, p2.box]
@@ -39,8 +39,10 @@ parse-path = (path, trianglify = false) ->
     b1.y < b2.y + b2.height and b1.y + b1.height > b2.y) => return false
     # for check p1 in p2 and p2 in p1
     for m from 0 to 1 =>
+      count = 0
       is-inside = true
       [p1,p2] = [p2,p1]
+      total = (p1.data.length / (skip or 1)) or 1
       # for each point
       for k from 0 til p1.data.length by skip =>
         [x, y] = [p1.data[k], p1.data[k + 1]]
@@ -52,10 +54,19 @@ parse-path = (path, trianglify = false) ->
           [xj, yj] = [p2.data[j], p2.data[j + 1]]
           if (yi > y) != (yj > y) and (x < (xj - xi) * (y - yi) / (yj - yi) + xi) => inside = !inside
         is-inside = is-inside and inside
-        #if is-inside => return true # no waste time for further checking
+        if inside => count++
+        # 1. this ensure that every point is inside. doesn't work well if font is not designed properly
+        #    for example, SVG from `堡` with 裝甲明朝 works incorrectly.
+        if ratio == 1 => continue
+        # 2. alternatively, this ensure any point is inside
+        # howevere for our scenario we may want to ensure a certain amount of points is inside
+        # to consider them as intersect.
+        if ratio == 0 =>
+          if inside => return true else continue
+        # 3. last, a percentage is check based on given ratio.
+        if count /total >= ratio => return true
       if is-inside => return true
     return is-inside
-  
   # group polygons by intersection
   group.init!
   for i from 0 til paths.length => group.add i

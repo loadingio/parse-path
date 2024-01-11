@@ -128,8 +128,9 @@ parsePath = function(path, trianglify){
   });
   shapes = [];
   shape = null;
-  intersect = function(p1, p2){
-    var skip, ref$, b1, b2, i$, m, isInside, j$, to$, k, x, y, inside, k$, to1$, i, j, xi, yi, xj, yj;
+  intersect = function(p1, p2, ratio){
+    var skip, ref$, b1, b2, i$, m, count, isInside, total, j$, to$, k, x, y, inside, k$, to1$, i, j, xi, yi, xj, yj;
+    ratio == null && (ratio = 0.5);
     skip = 0;
     skip = skip * 2 + 2;
     ref$ = [p1.box, p2.box], b1 = ref$[0], b2 = ref$[1];
@@ -138,8 +139,10 @@ parsePath = function(path, trianglify){
     }
     for (i$ = 0; i$ <= 1; ++i$) {
       m = i$;
+      count = 0;
       isInside = true;
       ref$ = [p2, p1], p1 = ref$[0], p2 = ref$[1];
+      total = p1.data.length / (skip || 1) || 1;
       for (j$ = 0, to$ = p1.data.length; skip < 0 ? j$ > to$ : j$ < to$; j$ += skip) {
         k = j$;
         ref$ = [p1.data[k], p1.data[k + 1]], x = ref$[0], y = ref$[1];
@@ -154,6 +157,22 @@ parsePath = function(path, trianglify){
           }
         }
         isInside = isInside && inside;
+        if (inside) {
+          count++;
+        }
+        if (ratio === 1) {
+          continue;
+        }
+        if (ratio === 0) {
+          if (inside) {
+            return true;
+          } else {
+            continue;
+          }
+        }
+        if (count / total >= ratio) {
+          return true;
+        }
       }
       if (isInside) {
         return true;
